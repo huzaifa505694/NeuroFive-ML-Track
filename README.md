@@ -1,4 +1,4 @@
-# MeuroFive-ML-Track
+# NeuroFive-ML-Track
 
 Task submissions for the **Neurofive Solutions ML Internship Track** — a series of hands-on tasks building ML fundamentals from the ground up, documented publicly on GitHub and LinkedIn.
 
