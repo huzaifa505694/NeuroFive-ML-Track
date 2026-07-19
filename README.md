@@ -1,10 +1,10 @@
-# neurofive-ml-track
+# MeuroFive-ML-Track
 
 Task submissions for the **Neurofive Solutions ML Internship Track** — a series of hands-on tasks building ML fundamentals from the ground up, documented publicly on GitHub and LinkedIn.
 
 ---
 
-## Task 1 — Environment Setup & First Exploratory Data Analysis (EDA)
+## Week 1 · Task 1 — Environment Setup & First Exploratory Data Analysis (EDA)
 
 ### Objective
 Before touching any modeling, set up a working Python/ML toolkit and practice "listening" to a dataset — understanding its shape, quality, and quirks prior to building anything on top of it.
@@ -65,6 +65,41 @@ neurofive-ml-track/
 - [x] Markdown "data story" written
 - [x] Notebook pushed to this public repo
 - [x] 2–3 min walkthrough recorded and posted to LinkedIn, tagging Neurofive Solutions
+
+---
+
+## Week 1 · Task 2 — Data Cleaning & Visual Storytelling
+
+### Objective
+Real data is messy. This task cleans the dataset properly and tells its story visually — treating visualization as a diagnostic tool for catching mistakes and finding patterns, not decoration.
+
+### Missing Value Strategy
+| Column | Missing | Method | Justification |
+|---|---|---|---|
+| `Age` | ~20% | Median fill | Age is right-skewed; median resists distortion from outliers better than the mean |
+| `Embarked` | 2 rows | Mode fill | Only 2 rows affected — using the most common port is low-risk |
+| `Cabin` | ~77% | Converted to binary `Has_Cabin` flag, column dropped | Too sparse to impute meaningfully; a presence/absence flag preserves signal without fabricating values |
+
+### Outlier Detection
+- **Method:** Boxplot on `Fare`
+- **Finding:** Several extreme high-fare outliers well above the interquartile range, consistent with a small number of premium tickets
+
+### Visualizations
+1. **Histogram** — Age distribution
+2. **Boxplot** — Fare (outlier detection)
+3. **Bar chart** — Survival rate by Sex
+4. **Correlation heatmap** — numerical feature correlations, including engineered `Has_Cabin`
+
+### Key Question: Which feature most affects survival?
+**Sex** shows the largest, most consistent gap in survival rate (~74% for women vs. ~19% for men), backed by `Pclass` and `Fare` also correlating with `Survived` in the heatmap — consistent with the historical "women and children first" account and first-class passengers having better lifeboat access.
+
+### Deliverables Checklist
+- [x] Missing values handled and justified in a markdown note
+- [x] Outliers detected via boxplot
+- [x] 4+ visualizations (histogram, boxplot, bar chart, heatmap)
+- [x] Written answer on the most predictive feature
+- [x] Updated notebook committed to this repo with a clear commit message
+- [x] Short video (2–3 min) on one surprising visualization, posted to LinkedIn tagging Neurofive Solutions
 
 ---
 
