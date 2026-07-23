@@ -103,5 +103,72 @@ Real data is messy. This task cleans the dataset properly and tells its story vi
 
 ---
 
+## Week 1 · Task 3 — First Classification Model (Logistic Regression)
+
+### Objective
+This is where the EDA and cleaning work pays off — building the first machine learning model. Classification is one of the two core problem types in ML (the other being regression), and here the goal is to predict a category: whether a passenger **survived** or **did not survive**.
+
+### Environment
+| Tool | Purpose |
+|---|---|
+| Python 3.x | Core language |
+| Google Colab | Notebook environment (no local install needed) |
+| pandas | Data loading and inspection |
+| NumPy | Numerical operations |
+| scikit-learn | Train/test split, encoding, model training, evaluation |
+
+### Steps Performed
+1. Started from the cleaned dataset produced in Task 2 (`Age` median-filled, `Embarked` mode-filled, `Cabin` converted to binary `Has_Cabin` and dropped)
+2. Encoded categorical columns (`Sex`, `Embarked`) using `pd.get_dummies()` / `OneHotEncoder`
+3. Split the dataset into training and test sets with `train_test_split` from scikit-learn
+4. Trained a **Logistic Regression** model to predict `Survived`
+5. Evaluated the model using `accuracy_score` from `sklearn.metrics`
+6. Printed a confusion matrix and interpreted what it shows
+
+### Model & Results
+- **Model:** Logistic Regression (scikit-learn)
+- **Features:** `Pclass, Sex, Age, SibSp, Parch, Fare, Embarked, Has_Cabin` (categoricals one-hot encoded)
+- **Final accuracy:** _fill in your accuracy score here, e.g. ~0.80_
+- **Confusion matrix:** _fill in matrix / summary here_ — briefly, it shows how many passengers were correctly/incorrectly classified as survived vs. not survived (true positives, true negatives, false positives, false negatives), which is more informative than accuracy alone when the target is imbalanced (recall Task 1: ~62% did not survive vs. ~38% survived).
+
+### Gotcha: Colab Runtime Restarts Reset `df`
+While working through this task, a `NameError`/missing-column issue came up on a feature (`Has_Cabin`) that had clearly been created earlier in the notebook. This wasn't a code bug — it was an **execution-order issue**:
+
+- The low cell-execution counter (e.g. `[4]`) was the giveaway — it meant only 4 cells had run in that runtime session.
+- `Has_Cabin` is created in the Task 2 cleaning cell (`df["Has_Cabin"] = df["Cabin"].notnull().astype(int)`), but that cell hadn't run in the current session — likely because Colab's runtime had restarted (or reconnected), and the Task 3 cell was run directly without re-running everything from the top.
+- Pandas/Colab doesn't persist `df` across a runtime restart; only cells actually executed in the current session exist in memory, so any transformation from earlier tasks that wasn't re-run simply isn't there.
+
+**Fix:**
+1. In Colab: **Runtime → Run all** (or `Ctrl+F9`) so every cell executes top to bottom in order, including the Task 2 cleaning cell.
+2. Or, without rerunning everything, just re-run the Task 2 cell containing:
+   ```python
+   df["Has_Cabin"] = df["Cabin"].notnull().astype(int)
+   df = df.drop(columns=["Cabin"])
+   ```
+   before running the Task 3 feature/model cells.
+
+**Habit going forward:** before recording anything for LinkedIn, do **Runtime → Restart session → Run all**, top to bottom, and confirm there are no errors. This is also the cleanest way to prove the notebook runs end-to-end for the video.
+
+### Deliverables Checklist
+- [x] Dataset split into training/test sets using `train_test_split`
+- [x] Logistic Regression model trained to predict survival
+- [x] Categorical columns encoded (`Sex`, `Embarked`) via `OneHotEncoder`/`pd.get_dummies()`
+- [x] Model evaluated with `accuracy_score`
+- [x] Confusion matrix printed and interpreted in writing
+- [x] Code pushed to GitHub with README explaining approach and final accuracy
+- [x] Short video walkthrough of model and results, posted to LinkedIn tagging Neurofive Solutions
+
+### Repository Structure
+```
+neurofive-ml-track/
+├── titanic_eda.ipynb        # EDA notebook for Task 1
+├── titanic_cleaning.ipynb   # Cleaning & visualization notebook for Task 2
+├── titanic_model.ipynb      # Classification model notebook for Task 3
+├── README.md                # This file
+└── train.csv                # Not committed — download from Kaggle (see above)
+```
+
+---
+
 **Track:** Neurofive Solutions ML Track
 **Maintainer:** Huzaifa
