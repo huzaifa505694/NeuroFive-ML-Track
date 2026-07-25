@@ -128,8 +128,14 @@ This is where the EDA and cleaning work pays off — building the first machine 
 ### Model & Results
 - **Model:** Logistic Regression (scikit-learn)
 - **Features:** `Pclass, Sex, Age, SibSp, Parch, Fare, Embarked, Has_Cabin` (categoricals one-hot encoded)
-- **Final accuracy:** _fill in your accuracy score here, e.g. ~0.80_
-- **Confusion matrix:** _fill in matrix / summary here_ — briefly, it shows how many passengers were correctly/incorrectly classified as survived vs. not survived (true positives, true negatives, false positives, false negatives), which is more informative than accuracy alone when the target is imbalanced (recall Task 1: ~62% did not survive vs. ~38% survived).
+- **Final accuracy:** 0.8045 (~80%)
+- **Confusion matrix:**
+  |  | Predicted: Did Not Survive | Predicted: Survived |
+  |---|---|---|
+  | **Actual: Did Not Survive** | 96 (TN) | 14 (FP) |
+  | **Actual: Survived** | 21 (FN) | 48 (TP) |
+
+  The model correctly classifies most non-survivors and a solid majority of survivors. The 21 false negatives (actual survivors predicted as non-survivors) are the largest error group — a miss that accuracy alone doesn't surface, since it treats every correct/incorrect prediction the same regardless of class (recall Task 1: ~62% did not survive vs. ~38% survived).
 
 ### Gotcha: Colab Runtime Restarts Reset `df`
 While working through this task, a `NameError`/missing-column issue came up on a feature (`Has_Cabin`) that had clearly been created earlier in the notebook. This wasn't a code bug — it was an **execution-order issue**:
@@ -164,9 +170,50 @@ neurofive-ml-track/
 ├── titanic_eda.ipynb        # EDA notebook for Task 1
 ├── titanic_cleaning.ipynb   # Cleaning & visualization notebook for Task 2
 ├── titanic_model.ipynb      # Classification model notebook for Task 3
+├── titanic_tuning.ipynb     # Evaluation & hyperparameter tuning notebook for Task 4
 ├── README.md                # This file
 └── train.csv                # Not committed — download from Kaggle (see above)
 ```
+
+---
+
+## Week 2 · Task 4 — Model Evaluation & Hyperparameter Tuning
+
+### Objective
+Accuracy can lie, especially with imbalanced data. This task evaluates the Task 3 model the way a real ML engineer would — with precision, recall, and F1 — and then systematically improves it with hyperparameter tuning instead of guessing at settings.
+
+### Steps Performed
+1. Revisited the Task 3 Logistic Regression model (same features: `Pclass, Sex, Age, SibSp, Parch, Fare, Embarked, Has_Cabin`)
+2. Calculated Precision, Recall, and F1-score with `sklearn.metrics.classification_report`
+3. Tuned 2 hyperparameters (`C` and `class_weight`) with `GridSearchCV` (5-fold CV, scored on F1)
+4. Compared the tuned model to the original in a before/after table
+
+### Why Accuracy Alone Can Be Misleading
+About 62% of passengers didn't survive, so a model that predicts "did not survive" for everyone would score ~61% accuracy without learning anything — and it would have 0% recall on survivors, missing every one. Accuracy weighs both classes equally, but the minority class (Survived) is the one that actually matters here. Precision, recall, and F1 expose class-level failures that a single accuracy number hides.
+
+### Hyperparameter Tuning
+- **Method:** `GridSearchCV`, tuning `C` (`[0.01, 0.1, 1, 10, 100]`) and `class_weight` (`[None, "balanced"]`), 5-fold CV, scored on F1
+- **Best parameters:** `C=0.1`, `class_weight="balanced"`
+- **Best CV F1-score:** 0.7419
+
+### Before / After Comparison
+| Metric | Baseline Model | Tuned Model | Change |
+|---|---|---|---|
+| Accuracy | 0.8045 | 0.7821 | -0.0223 |
+| Precision | 0.7742 | 0.7027 | -0.0715 |
+| Recall | 0.6957 | 0.7536 | +0.0580 |
+| F1-Score | 0.7328 | 0.7273 | -0.0056 |
+
+**What tuning improved (or didn't):** the tuned model trades a bit of accuracy and precision for meaningfully better **recall** on survivors — it catches more real survivors at the cost of a few more false positives. Overall F1 stayed roughly flat. This is a direct illustration of why accuracy alone would make the baseline look like the safer choice, when in fact the tuned model is the one that misses fewer actual survivors.
+
+### Deliverables Checklist
+- [x] Revisited the Task 3 classification model
+- [x] Calculated Precision, Recall, F1-score with `classification_report`
+- [x] Written explanation of why accuracy alone is misleading for imbalanced data
+- [x] Tuned 2+ hyperparameters with `GridSearchCV`
+- [x] Before/after comparison table
+- [ ] Notebook pushed to GitHub
+- [ ] Video walkthrough recorded and posted to LinkedIn, tagging Neurofive Solutions
 
 ---
 
