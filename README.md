@@ -167,12 +167,14 @@ While working through this task, a `NameError`/missing-column issue came up on a
 ### Repository Structure
 ```
 neurofive-ml-track/
-├── titanic_eda.ipynb        # EDA notebook for Task 1
-├── titanic_cleaning.ipynb   # Cleaning & visualization notebook for Task 2
-├── titanic_model.ipynb      # Classification model notebook for Task 3
-├── titanic_tuning.ipynb     # Evaluation & hyperparameter tuning notebook for Task 4
-├── README.md                # This file
-└── train.csv                # Not committed — download from Kaggle (see above)
+├── titanic_eda.ipynb         # EDA notebook for Task 1
+├── titanic_cleaning.ipynb    # Cleaning & visualization notebook for Task 2
+├── titanic_model.ipynb       # Classification model notebook for Task 3
+├── titanic_tuning.ipynb      # Evaluation & hyperparameter tuning notebook for Task 4
+├── titanic_pipeline.ipynb    # Pipeline & feature engineering notebook for Task 5
+├── titanic_pipeline.joblib   # Saved fitted pipeline artifact from Task 5
+├── README.md                 # This file
+└── train.csv                 # Not committed — download from Kaggle (see above)
 ```
 
 ---
@@ -212,6 +214,94 @@ About 62% of passengers didn't survive, so a model that predicts "did not surviv
 - [x] Written explanation of why accuracy alone is misleading for imbalanced data
 - [x] Tuned 2+ hyperparameters with `GridSearchCV`
 - [x] Before/after comparison table
+- [ ] Notebook pushed to GitHub
+- [ ] Video walkthrough recorded and posted to LinkedIn, tagging Neurofive Solutions
+
+---
+
+## Week 3 · Task 5 — Building a Clean, Reusable Pipeline
+
+### Objective
+Professional ML code isn't a pile of notebook cells — it's a clean, reusable pipeline. This task replaces the manual preprocessing from Tasks 3–4 with a proper scikit-learn `Pipeline`, so preprocessing and modeling steps can't be applied inconsistently or leak data between train/test sets.
+
+### Steps Performed
+1. Reloaded the raw Titanic dataset and engineered two new features on top of the existing `Has_Cabin` flag:
+   - `FamilySize` = `SibSp + Parch + 1`
+   - `IsAlone` = `1` if `FamilySize == 1`, else `0`
+2. Built a reusable `build_pipeline()` function using `ColumnTransformer`:
+   - **Numerical branch:** `SimpleImputer(strategy="median")` → `StandardScaler()`
+   - **Categorical branch:** `SimpleImputer(strategy="most_frequent")` → `OneHotEncoder(handle_unknown="ignore", drop="first")`
+3. Chained the `ColumnTransformer` and a `LogisticRegression` classifier into a single `Pipeline` object
+4. Split the data with a stratified `train_test_split`, then fit and evaluated the pipeline in one `.fit()` / `.predict()` call
+5. Compared the pipeline's accuracy against the Task 3 manual-approach accuracy to confirm the refactor didn't change model behavior
+6. Rebuilt the pipeline without `FamilySize`/`IsAlone` to test whether the engineered features actually earned their place
+7. Saved the final fitted pipeline with `joblib.dump()`
+
+### Pipeline Architecture
+```python
+numeric_transformer = Pipeline(steps=[
+    ("imputer", SimpleImputer(strategy="median")),
+    ("scaler", StandardScaler())
+])
+categorical_transformer = Pipeline(steps=[
+    ("imputer", SimpleImputer(strategy="most_frequent")),
+    ("encoder", OneHotEncoder(handle_unknown="ignore", drop="first"))
+])
+preprocessor = ColumnTransformer(transformers=[
+    ("num", numeric_transformer, numerical_feats),
+    ("cat", categorical_transformer, categorical_feats)
+])
+pipeline = Pipeline(steps=[
+    ("preprocessor", preprocessor),
+    ("classifier", classifier)
+])
+```
+- **Numerical features:** `Age, Fare, SibSp, Parch, Pclass, Has_Cabin, FamilySize, IsAlone`
+- **Categorical features:** `Sex, Embarked` (one-hot encoded)
+
+### Pipeline vs. Manual Approach
+| Approach | Accuracy |
+|---|---|
+| Manual (Task 3) | 0.8045 |
+| Pipeline | 0.8045 |
+
+The pipeline matches the manual approach's accuracy exactly — confirming the `ColumnTransformer` + `Pipeline` refactor changed *how reliably* preprocessing is applied, not the model's actual behavior.
+
+**Confusion matrix (pipeline):**
+|  | Predicted: Did Not Survive | Predicted: Survived |
+|---|---|---|
+| **Actual: Did Not Survive** | 94 (TN) | 16 (FP) |
+| **Actual: Survived** | 19 (FN) | 50 (TP) |
+
+| Class | Precision | Recall | F1 |
+|---|---|---|---|
+| Did Not Survive | 0.83 | 0.85 | 0.84 |
+| Survived | 0.76 | 0.72 | 0.74 |
+
+### Feature Engineering: Did `FamilySize` / `IsAlone` Help?
+| Feature Set | Accuracy |
+|---|---|
+| Without `FamilySize` / `IsAlone` | 0.8101 |
+| With `FamilySize` / `IsAlone` | 0.8045 |
+
+No — accuracy actually dropped slightly (0.8101 → 0.8045). `FamilySize` is a linear combination of `SibSp` and `Parch`, both already in the model, so it adds redundant/collinear signal rather than new information, and `IsAlone` is a coarser version of the same thing. For a regularized linear model like Logistic Regression, that redundancy doesn't help and can slightly hurt. Testing engineered features against a baseline — trivial to do once the pipeline exists — is what catches this before it ships.
+
+### Why Pipelines Matter
+- **Prevents data leakage:** imputer/scaler statistics are learned only from `X_train`, never from `X_test`, since `.fit()` runs once on training data only
+- **Prevents train/test inconsistency:** the same transformations apply to both sets automatically — no risk of forgetting a `fillna()` on one side (see the Task 3 Colab-restart bug above)
+- **Reusable:** `build_pipeline()` was reused twice with two different feature sets in a couple of lines
+- **Deployable:** the saved `.joblib` file is the whole preprocessing + model in one artifact — loading it and calling `.predict()` on raw new data just works
+
+### Artifact
+- Final fitted pipeline saved to `titanic_pipeline.joblib` via `joblib.dump()`
+
+### Deliverables Checklist
+- [x] Picked a dataset already used (Titanic)
+- [x] Built a single Pipeline using `ColumnTransformer` — `StandardScaler` on numerical columns, `OneHotEncoder` on categorical columns
+- [x] Chained the preprocessing step and the model into one pipeline object
+- [x] Fit and evaluated the pipeline, confirming it matches the manual approach's accuracy (0.8045)
+- [x] Created 2 new engineered features (`FamilySize`, `IsAlone`) and tested whether they improve performance
+- [x] Saved final pipeline using `joblib`
 - [ ] Notebook pushed to GitHub
 - [ ] Video walkthrough recorded and posted to LinkedIn, tagging Neurofive Solutions
 
