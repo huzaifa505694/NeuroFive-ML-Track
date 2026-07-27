@@ -219,7 +219,7 @@ About 62% of passengers didn't survive, so a model that predicts "did not surviv
 
 ---
 
-## Week 3 · Task 5 — Building a Clean, Reusable Pipeline
+## Week 4 · Task 5 — Building a Clean, Reusable Pipeline
 
 ### Objective
 Professional ML code isn't a pile of notebook cells — it's a clean, reusable pipeline. This task replaces the manual preprocessing from Tasks 3–4 with a proper scikit-learn `Pipeline`, so preprocessing and modeling steps can't be applied inconsistently or leak data between train/test sets.
